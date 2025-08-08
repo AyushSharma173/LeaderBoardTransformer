@@ -1,0 +1,55 @@
+{
+    "os": "macOS-15.5-arm64-arm-64bit",
+    "python": "CPython 3.11.11",
+    "heartbeatAt": "2025-08-07T23:31:09.001810",
+    "startedAt": "2025-08-07T23:31:08.588425",
+    "docker": null,
+    "args": [
+        "service",
+        "--debug",
+        "--port-filename",
+        "/var/folders/r2/p_7gh0_n45n_qfnf70n2njg40000gn/T/tmp5jbjgdn_/port-11809.txt",
+        "--pid",
+        "11809"
+    ],
+    "state": "running",
+    "program": "/Users/ayushsharma/Documents/Portfolio_Projects/CS336_Stanford/assignment1-basics/cs336_basics/run_sweep.py",
+    "codePathLocal": "cs336_basics/run_sweep.py",
+    "codePath": "cs336_basics/run_sweep.py",
+    "git": {
+        "remote": "https://github.com/stanford-cs336/assignment1-basics.git",
+        "commit": "1076cb9741ca280afd71e6d768ddd09ab42e9c4d"
+    },
+    "email": "ayush.psr@gmail.com",
+    "root": "/Users/ayushsharma/Documents/Portfolio_Projects/CS336_Stanford/assignment1-basics",
+    "host": "Ayushs-MacBook-Pro-6.local",
+    "username": null,
+    "executable": "/Users/ayushsharma/Documents/Portfolio_Projects/CS336_Stanford/assignment1-basics/.venv/bin/python",
+    "cpu_count": 8,
+    "cpu_count_logical": 8,
+    "cpu_freq": {
+        "current": 4056,
+        "min": 744,
+        "max": 4056
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 4056,
+            "min": 744,
+            "max": 4056
+        }
+    ],
+    "disk": {
+        "/": {
+            "total": 994662584320,
+            "used": 14749798400
+        },
+        "/System/Volumes/Data": {
+            "total": 994662584320,
+            "used": 821523542016
+        }
+    },
+    "memory": {
+        "total": 17179869184
+    }
+}

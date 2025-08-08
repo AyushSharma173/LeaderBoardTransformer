@@ -1,0 +1,44 @@
+{
+  "os":  "macOS-15.5-arm64-arm-64bit",
+  "python":  "CPython 3.11.11",
+  "startedAt":  "2025-07-26T23:04:39.199973Z",
+  "program":  "/Users/ayushsharma/Documents/Portfolio_Projects/CS336_Stanford/assignment1-basics/cs336_basics/run_sweep.py",
+  "codePath":  "cs336_basics/run_sweep.py",
+  "git":  {
+    "remote":  "https://github.com/stanford-cs336/assignment1-basics.git",
+    "commit":  "1076cb9741ca280afd71e6d768ddd09ab42e9c4d"
+  },
+  "email":  "ayushs5@illinois.edu",
+  "root":  "/Users/ayushsharma/Documents/Portfolio_Projects/CS336_Stanford/assignment1-basics",
+  "host":  "Ayushs-MacBook-Pro-6.local",
+  "executable":  "/Users/ayushsharma/Documents/Portfolio_Projects/CS336_Stanford/assignment1-basics/.venv/bin/python3",
+  "codePathLocal":  "cs336_basics/run_sweep.py",
+  "cpu_count":  8,
+  "cpu_count_logical":  8,
+  "disk":  {
+    "/":  {
+      "total":  "994662584320",
+      "used":  "831072583680"
+    },
+    "/System/Volumes/Data":  {
+      "total":  "994662584320",
+      "used":  "831072583680"
+    }
+  },
+  "memory":  {
+    "total":  "17179869184"
+  },
+  "cpu":  {
+    "count":  8,
+    "countLogical":  8
+  },
+  "apple":  {
+    "name":  "Apple M3",
+    "ecpuCores":  4,
+    "pcpuCores":  4,
+    "gpuCores":  10,
+    "memoryGb":  16,
+    "swapTotalBytes":  "24696061952",
+    "ramTotalBytes":  "17179869184"
+  }
+}

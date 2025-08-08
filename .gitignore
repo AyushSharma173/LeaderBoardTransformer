@@ -1,0 +1,7 @@
+data/
+datasets/
+checkpoints/
+outputs/
+*.pt
+*.ckpt
+.DS_Store
