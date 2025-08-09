@@ -442,10 +442,13 @@ def learning_rate_schedule(t, alpha_min, alpha_max, t_w, t_c):
 def gradient_clipping(parameters, max_norm, epsilon=1e-6):
     grads = [p.grad for p in parameters if p.grad is not None and p.requires_grad]
 
+    if not grads:
+        return parameters, 0.0
+
     # Flatten and concatenate all gradients
     flat_grads = torch.cat([g.view(-1) for g in grads])
 
-    grad_norm = torch.norm(flat_grads, p=2)
+    grad_norm = torch.norm(flat_grads, p=2).item()
 
     if grad_norm > max_norm:
         scale = max_norm / (grad_norm + epsilon)
@@ -453,7 +456,7 @@ def gradient_clipping(parameters, max_norm, epsilon=1e-6):
             if p.grad is not None and p.requires_grad:
                 p.grad.mul_(scale)
 
-    return parameters
+    return parameters, grad_norm
     
 
 import numpy as np
@@ -560,7 +563,38 @@ def train_llm(
         dtype=dtype,
     )
 
+    # Log model configuration and hyperparameters
+    config = {
+        "model/d_model": d_model,
+        "model/num_heads": num_heads,
+        "model/d_ff": d_ff,
+        "model/max_seq_len": max_seq_len,
+        "model/theta": theta,
+        "model/vocab_size": vocab_size,
+        "model/context_length": context_length,
+        "model/num_layers": num_layers,
+        "training/batch_size": batch_size,
+        "training/max_steps": max_steps,
+        "training/clip_grad": clip_grad,
+        "training/lr": lr,
+        "training/alpha_min": alpha_min,
+        "training/alpha_max": alpha_max,
+        "training/t_w": t_w,
+        "training/t_c": t_c,
+        "training/eval_every": eval_every,
+        "data/train_tokens": len(train_arr),
+        "data/val_tokens": len(val_arr),
+    }
+    wandb.config.update(config)
 
+    # Count model parameters
+    total_params = sum(p.numel() for p in model.parameters())
+    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    wandb.config.update({
+        "model/total_params": total_params,
+        "model/trainable_params": trainable_params,
+        "model/params_M": total_params / 1e6,
+    })
 
     # optimizer = AdamW(model.parameters(), lr=1e-3, betas=(0.9, 0.999), eps=1e-8, weight_decay=0.0)
     optimizer = AdamW(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-8, weight_decay=0.0)
@@ -572,27 +606,51 @@ def train_llm(
         iteration = 0
 
 
+    # Initialize metrics tracking
+    tokens_processed = 0
+    
     for step in range(iteration, max_steps):
-        print(f"Step {step}")
+        step_start_time = time.time()
         
         optimizer.zero_grad()
-
         model = model.to(device)
 
-
+        # Get batch
         inputs, targets = data_loading(train_arr, batch_size, context_length, device)
+        tokens_processed += batch_size * context_length
 
+        # Forward pass
         logits = model(inputs)
-
         loss = cross_entropy_loss(logits, targets)
+        
+        # Backward pass
         loss.backward()
-        gradient_clipping(model.parameters(), clip_grad)
-
+        _, grad_norm = gradient_clipping(model.parameters(), clip_grad)
+        
+        # Get current learning rate (if using schedule)
+        current_lr = learning_rate_schedule(step, alpha_min, alpha_max, t_w, t_c)
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = current_lr
+            
         optimizer.step()
         iteration += 1
         
-        # Initialize val_loss as None
-        val_loss = None
+        # Calculate step metrics
+        step_time = time.time() - step_start_time
+        wall_time = time.time() - start_time
+        tokens_per_sec = (batch_size * context_length) / step_time if step_time > 0 else 0
+        
+        # Initialize metrics for this step
+        log_dict = {
+            "train/loss": loss.item(),
+            "train/perplexity": math.exp(min(loss.item(), 10)),  # Cap to prevent overflow
+            "optimization/learning_rate": current_lr,
+            "optimization/grad_norm": grad_norm,
+            "performance/tokens_per_sec": tokens_per_sec,
+            "performance/wall_time": wall_time,
+            "performance/step_time": step_time,
+            "data/tokens_processed": tokens_processed,
+        }
         
         # Evaluation every eval_every steps
         if step % eval_every == 0:
@@ -601,36 +659,47 @@ def train_llm(
             print(f"Step {step}: Train Loss = {loss.item():.4f}, Val Loss = {val_loss:.4f}")
             save_checkpoint(model, optimizer, step, ckpt_path)
 
-            # Generate text every step (optional - you might want to do this less frequently)
+            # Add validation metrics
+            log_dict.update({
+                "val_loss": val_loss,  # ✅ Fixed: matches sweep.yaml metric name
+                "val/loss": val_loss,  # Keep both for compatibility
+                "val/perplexity": math.exp(min(val_loss, 10)),
+            })
+
+            # Generate text sample for qualitative evaluation
             model.eval()
             with torch.no_grad():
-                start_tokens = tokenizer.encode(" ")
+                start_tokens = tokenizer.encode("Once upon a time")
                 input_ids = torch.tensor([start_tokens], device=device)
                 generated_ids = model.generate(input_ids, max_new_tokens=50)
-                print(f"Generated ids: {generated_ids}" )
-                print(f"Generated ids shape: {generated_ids.shape}")
-                print(f"Generated text: {tokenizer.decode(generated_ids[0].tolist())}")
+                generated_text = tokenizer.decode(generated_ids[0].tolist())
+                print(f"Generated text: {generated_text}")
+                
+                # Log generated text as wandb table for better visualization
+                wandb.log({
+                    "samples/generated_text": wandb.Html(f"<p><b>Step {step}:</b> {generated_text}</p>")
+                })
             model.train()
 
-            wandb.log({"step": step, "val_loss": val_loss})
+        # Print progress less frequently for cleaner logs
+        if step % 10 == 0 or step % eval_every == 0:
+            print(f"Step {step}: Train Loss = {loss.item():.4f}, LR = {current_lr:.6f}, "
+                  f"Grad Norm = {grad_norm:.4f}, Tokens/sec = {tokens_per_sec:.0f}")
 
-
-        # Print train loss every step
-        wall_time = time.time() - start_time
-        print(f"Step {step}: Train Loss = {loss.item():.4f}")
-
-
-        
-        # Log to wandb - include val_loss when available
-        log_dict = {
-            "step": step,
-            "train_loss": loss.item(),
-            "wall_time": wall_time,
-        }
-        if val_loss is not None:
-            log_dict["val_loss"] = val_loss
-            
+        # Single wandb.log call with all metrics
         wandb.log(log_dict)
+    
+    # Final evaluation and summary logging for sweep
+    print("Training completed. Running final evaluation...")
+    final_val_loss = evaluate_model(model, val_arr, batch_size, context_length, device)
+    
+    # Log final metrics to summary (important for sweep parallel coordinates)
+    wandb.run.summary["final_val_loss"] = final_val_loss
+    wandb.run.summary["val_loss"] = final_val_loss  # Matches sweep metric name
+    wandb.run.summary["final_train_loss"] = loss.item()
+    
+    print(f"Final validation loss: {final_val_loss:.4f}")
+    print(f"Final training loss: {loss.item():.4f}")
 
 
 
@@ -643,18 +712,31 @@ def sweep_run():
     import numpy as np
     from tokenizer import Tokenizer
 
-    # ✅ FIRST: call wandb.init()
-    wandb.init()
+    # ✅ FIRST: call wandb.init() without accessing config
+    run = wandb.init(
+        project="LeaderBoardTransformer",
+        tags=["sweep", "transformer", "tinystories"],
+    )
 
     # Now you can access wandb.config safely
     config = wandb.config
-    device = "mps" if torch.backends.mps.is_available() else "cpu"
+
+    # Update run name after init
+    run.name = f"sweep_lr{config.get('lr', 'unknown'):.6f}_bs{config.get('batch_size', 'unknown')}"
+
+    device = "cuda" if torch.cuda.is_available() else (
+    "mps" if torch.backends.mps.is_available() else "cpu"
+    )
+    print("Using device:", device)
+
     tokenizer = Tokenizer.from_files("vocab.json", "merges.json", special_tokens=["<|endoftext|>"])
     vocab_size = len(tokenizer.vocab)
+    
+    print(f"Starting sweep run with config: {dict(config)}")
 
     train_llm(
-        train_path="../data/TinyStoriesV2-GPT4-train-tok-1pct.npy",
-        val_path="../data/TinyStoriesV2-GPT4-train-tok-1pct.npy",
+        train_path="../data/TinyStoriesV2-GPT4-train-tok.npy",
+        val_path="../data/TinyStoriesV2-GPT4-valid-tok.npy",  # ✅ Fixed: proper validation set
         batch_size=config.batch_size,
         max_steps=config.max_steps,
         ckpt_path="../checkpoints/model.pt",

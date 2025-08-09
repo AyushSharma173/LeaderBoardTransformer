@@ -1,0 +1,41 @@
+{
+  "os": "Linux-5.15.0-139-generic-x86_64-with-glibc2.39",
+  "python": "CPython 3.12.3",
+  "startedAt": "2025-08-09T02:12:36.909976Z",
+  "program": "/root/LeaderBoardTransformer/assignment1-basics/cs336_basics/main_modeling.py",
+  "codePath": "assignment1-basics/cs336_basics/main_modeling.py",
+  "git": {
+    "remote": "https://github.com/AyushSharma173/LeaderBoardTransformer.git",
+    "commit": "a7c8f667c21bed7cb0e8d268c03e2a3f7317c315"
+  },
+  "root": "/root/LeaderBoardTransformer/assignment1-basics",
+  "host": "dd4038cec61f",
+  "executable": "/root/LeaderBoardTransformer/assignment1-basics/.venv/bin/python3",
+  "codePathLocal": "cs336_basics/main_modeling.py",
+  "cpu_count": 104,
+  "cpu_count_logical": 208,
+  "gpu": "NVIDIA H100 80GB HBM3",
+  "gpu_count": 1,
+  "disk": {
+    "/": {
+      "total": "17179869184",
+      "used": "7501688832"
+    }
+  },
+  "memory": {
+    "total": "1081807237120"
+  },
+  "cpu": {
+    "count": 104,
+    "countLogical": 208
+  },
+  "gpu_nvidia": [
+    {
+      "name": "NVIDIA H100 80GB HBM3",
+      "memoryTotal": "85520809984",
+      "cudaCores": 16896,
+      "architecture": "Hopper"
+    }
+  ],
+  "cudaVersion": "12.9"
+}

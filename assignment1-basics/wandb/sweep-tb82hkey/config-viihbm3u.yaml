@@ -1,0 +1,20 @@
+wandb_version: 1
+
+batch_size:
+  value: 16
+context_length:
+  value: 128
+d_ff:
+  value: 1024
+d_model:
+  value: 256
+eval_every:
+  value: 100
+lr:
+  value: 0.009706972635630666
+max_steps:
+  value: 10
+num_heads:
+  value: 8
+num_layers:
+  value: 4

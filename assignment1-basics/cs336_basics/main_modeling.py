@@ -702,7 +702,10 @@ def sweep_run():
     """Function for hyperparameter sweeps with wandb."""
     wandb.init()
     config = wandb.config
-    device = "mps" if torch.backends.mps.is_available() else "cpu"
+    # device = "mps" if torch.backends.mps.is_available() else "cpu"
+    device = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
+    print("Using device:", device)
+
     tokenizer = Tokenizer.from_files("vocab.json", "merges.json", special_tokens=["<|endoftext|>"])
     vocab_size = len(tokenizer.vocab)
 
@@ -752,8 +755,11 @@ if __name__ == "__main__":
     )
 
     # Setup
-    device = "mps" if torch.backends.mps.is_available() else "cpu"
-    print(f"Using device: {device}")
+    # device = "mps" if torch.backends.mps.is_available() else "cpu"
+    # print(f"Using device: {device}")
+    device = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
+    print("Using device:", device)
+
     
     tokenizer = Tokenizer.from_files("vocab.json", "merges.json", special_tokens=["<|endoftext|>"])
     print(f"Tokenizer vocab length: {len(tokenizer.vocab)}")
@@ -761,7 +767,7 @@ if __name__ == "__main__":
     # Training
     train_llm(
         train_path="../data/TinyStoriesV2-GPT4-train-tok.npy",
-        val_path="../data/TinyStoriesV2-GPT4-valid-tok-10pct.npy",
+        val_path="../data/TinyStoriesV2-GPT4-train-tok.npy",
         batch_size=16,
         max_steps=1000,
         ckpt_path="../checkpoints/model.pt",
