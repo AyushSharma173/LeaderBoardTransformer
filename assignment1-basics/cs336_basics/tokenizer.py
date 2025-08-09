@@ -136,11 +136,11 @@ if __name__ == "__main__":
 
     # Set paths based on dataset choice
     if DATASET == "train":
-        input_path = "../data/TinyStoriesV2-GPT4-train.txt"
-        base_output_path = "../data/TinyStoriesV2-GPT4-train-tok"
+        input_path = "../data/owt_train.txt"
+        base_output_path = "../data/owt-train-tok"
     elif DATASET == "val":
-        input_path = "../data/TinyStoriesV2-GPT4-valid.txt"
-        base_output_path = "../data/TinyStoriesV2-GPT4-valid-tok"
+        input_path = "../data/owt_valid.txt"
+        base_output_path = "../data/owt-valid-tok"
     else:
         raise ValueError(f"Invalid dataset '{DATASET}'. Must be 'train' or 'val'")
     

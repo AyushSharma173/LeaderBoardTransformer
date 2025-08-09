@@ -16,13 +16,13 @@ parameters:
     value: 128
 
   d_model:
-    value: 256
+    value: 512
 
   num_heads:
     value: 8
 
   d_ff:
-    value: 1024
+    value: 1344
 
   num_layers:
     value: 4
@@ -31,6 +31,6 @@ parameters:
     value: 100
 
   max_steps:
-    value: 10
+    value: 1000
 
 program: cs336_basics/run_sweep.py
